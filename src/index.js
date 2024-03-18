@@ -8,7 +8,8 @@ import StarRating from "./components/StarRating";
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    {/*<App />*/}
-    <StarRating maxRating={5} messages={['Terrible', 'Bad', 'Okay', 'Good', 'Amazing']}/>
+    {/*http://www.omdbapi.com/?i=tt3896198&apikey=c5fcbcc7*/}
+    <App />
+    {/*<StarRating maxRating={5} messages={['Terrible', 'Bad', 'Okay', 'Good', 'Amazing']}/>*/}
   </React.StrictMode>
 );
