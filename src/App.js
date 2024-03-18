@@ -1,4 +1,5 @@
 import {useEffect, useState} from "react";
+import StarRating from "./components/StarRating";
 
 const tempMovieData = [
   {
@@ -191,15 +192,71 @@ function Box({children}) {
 }
 
 function SelectedMovie({selectedId, onCloseMovie}) {
-  return <div className="details">
-    <button onClick={onCloseMovie} className="btn-back">&larr;</button>
-    {selectedId}
-  </div>
+  const [movieData, setMovieData] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const {
+    Title: title,
+    Year: year,
+    Poster: poster,
+    Runtime: runtime,
+    imdbRating,
+    Plot: plot,
+    Actors: actors,
+    Director: director,
+    Genre: genre,
+    Released: released
+  } = movieData;
+
+  useEffect(() => {
+    async function getMovieData() {
+      setIsLoading(true);
+      const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&i=${selectedId}`)
+      const data = await res.json();
+      setMovieData(data);
+      setIsLoading(false);
+    }
+
+    getMovieData();
+  }, [selectedId]);
+
+  return (
+    <div className="details">
+      {
+        isLoading ?
+        <Loader /> :
+          <>
+            <header>
+              <button onClick={onCloseMovie} className="btn-back">
+                &larr;
+              </button>
+              <img src={poster} alt={`Poster of ${title}`}/>
+              <div className="details-overview">
+                <h2>{title}</h2>
+                <p>
+                  {released} &bull; {runtime}
+                </p>
+                <p>{genre}</p>
+                <p>{imdbRating} IMDB Rating</p>
+              </div>
+            </header>
+
+            <section className="rating">
+              <StarRating maxRating={10} size={24} key={selectedId}></StarRating>
+              <p>
+                <em>{plot}</em>
+              </p>
+              <p>Starring {actors}</p>
+              <p>Directed by {director}</p>
+            </section>
+          </>
+      }
+    </div>
+  )
 }
 
 function WatchedList({watched}) {
   return <ul className="list">
-    {watched.map(movie => <WatchedMovie movie={movie} key={movie.imdbID} />)}
+    {watched.map(movie => <WatchedMovie movie={movie} key={movie.imdbID}/>)}
   </ul>
 }
 
