@@ -57,13 +57,13 @@ export default function App() {
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const query = 'interstellar';
+  const [query, setQuery] = useState("interstellar");
 
   useEffect(() => {
     async function fetchMovies() {
       try {
         setIsLoading(true);
+        setError("");
         const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`);
 
         if (!res.ok) throw new Error("Something went wrong with fetching movies");
@@ -79,21 +79,32 @@ export default function App() {
         setIsLoading(false);
       }
     }
+
+    if (!query.length < 3) {
+      setMovies([]);
+      setError("");
+      return;
+    }
+
     fetchMovies();
-  }, []);
+  }, [query]);
+
+  function handleQuery(queryText) {
+    setQuery(queryText);
+  }
 
   return (
     <>
       <NavBar>
         <Logo />
-        <Search />
+        <Search query={query} onQuery={handleQuery}/>
         <NumResults movies={movies}/>
       </NavBar>
       <Main>
         <Box>
           {isLoading && <Loader />}
           {!isLoading && !error && <MoviesList movies={movies} />}
-          {error && <Error>{error}</Error>}
+          {error && <ErrorMessage>{error}</ErrorMessage>}
         </Box>
         <Box>
           <Summary watched={watched} />
@@ -104,7 +115,7 @@ export default function App() {
   );
 }
 
-function Error({children}) {
+function ErrorMessage({children}) {
   return <p className="error">{children}</p>
 }
 
@@ -131,15 +142,13 @@ function NumResults({movies}) {
   </p>
 }
 
-function Search() {
-  const [query, setQuery] = useState("");
-
+function Search({query, onQuery}) {
   return <input
     className="search"
     type="text"
     placeholder="Search movies..."
     value={query}
-    onChange={(e) => setQuery(e.target.value)}
+    onChange={(e) => onQuery(e.target.value)}
   />
 }
 
