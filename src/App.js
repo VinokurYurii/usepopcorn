@@ -57,7 +57,8 @@ export default function App() {
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [query, setQuery] = useState("interstellar");
+  const [query, setQuery] = useState("");
+  const [selectedId, setSelectedId] = useState(null);
 
   useEffect(() => {
     async function fetchMovies() {
@@ -80,7 +81,7 @@ export default function App() {
       }
     }
 
-    if (!query.length < 3) {
+    if (query.length < 3) {
       setMovies([]);
       setError("");
       return;
@@ -93,6 +94,15 @@ export default function App() {
     setQuery(queryText);
   }
 
+  function handleSetSelectedId(id) {
+    const newValue = id === selectedId ? null : id;
+    setSelectedId(newValue);
+  }
+
+  function handleCloseMovie() {
+    setSelectedId(null);
+  }
+
   return (
     <>
       <NavBar>
@@ -103,12 +113,21 @@ export default function App() {
       <Main>
         <Box>
           {isLoading && <Loader />}
-          {!isLoading && !error && <MoviesList movies={movies} />}
+          {!isLoading && !error && <MoviesList movies={movies} onSetSelectedId={handleSetSelectedId}/>}
           {error && <ErrorMessage>{error}</ErrorMessage>}
         </Box>
         <Box>
-          <Summary watched={watched} />
-          <WatchedList watched={watched} />
+          {
+            selectedId ?
+              <SelectedMovie
+                selectedId={selectedId}
+                onCloseMovie={handleCloseMovie}
+              /> :
+              <>
+                <Summary watched={watched}/>
+                <WatchedList watched={watched} />
+              </>
+          }
         </Box>
       </Main>
     </>
@@ -171,6 +190,13 @@ function Box({children}) {
   </div>
 }
 
+function SelectedMovie({selectedId, onCloseMovie}) {
+  return <div className="details">
+    <button onClick={onCloseMovie} className="btn-back">&larr;</button>
+    {selectedId}
+  </div>
+}
+
 function WatchedList({watched}) {
   return <ul className="list">
     {watched.map(movie => <WatchedMovie movie={movie} key={movie.imdbID} />)}
@@ -226,16 +252,16 @@ function Summary({watched}) {
   </div>
 }
 
-function MoviesList({movies}) {
-  return <ul className="list">
+function MoviesList({movies, onSetSelectedId}) {
+  return <ul className="list list-movies">
     {movies?.map((movie) => (
-      <Movie movie={movie} key={movie.imdbID}/>
+      <Movie movie={movie} key={movie.imdbID} onClick={() => onSetSelectedId(movie.imdbID)}/>
     ))}
   </ul>
 }
 
-function Movie({movie}) {
-  return <li>
+function Movie({movie, onClick}) {
+  return <li onClick={onClick}>
     <img src={movie.Poster} alt={`${movie.Title} poster`}/>
     <h3>{movie.Title}</h3>
     <div>
