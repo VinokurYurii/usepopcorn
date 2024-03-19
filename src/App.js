@@ -236,6 +236,12 @@ function SelectedMovie({selectedId, onCloseMovie, onAddWatched, selectedWatchedM
     getMovieData();
   }, [selectedId]);
 
+  useEffect(() => {
+    if (!title) return;
+
+    document.title = `Movie | ${title}`;
+  }, [title]);
+
   function handleAdd() {
     if (userRating === 0) return;
 
