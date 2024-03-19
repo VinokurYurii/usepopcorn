@@ -60,6 +60,7 @@ export default function App() {
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(null);
+  const [selectedWatchedMovie, setSelectedWatchedMovie] = useState(null);
 
   useEffect(() => {
     async function fetchMovies() {
@@ -97,11 +98,23 @@ export default function App() {
 
   function handleSetSelectedId(id) {
     const newValue = id === selectedId ? null : id;
+
+    setSelectedWatchedMovie(watched.find(m => m.imdbID === id));
     setSelectedId(newValue);
   }
 
   function handleCloseMovie() {
     setSelectedId(null);
+  }
+
+  function handleAddWatched(movie) {
+    if (watched.find(m => m.imdbID === movie.imdbID)) return;
+
+    setWatched(watched => [...watched, movie]);
+  }
+
+  function handleDeleteWatched(id) {
+    setWatched(watched => watched.filter(m => m.imdbID !== id))
   }
 
   return (
@@ -123,10 +136,12 @@ export default function App() {
               <SelectedMovie
                 selectedId={selectedId}
                 onCloseMovie={handleCloseMovie}
+                onAddWatched={handleAddWatched}
+                selectedWatchedMovie={selectedWatchedMovie}
               /> :
               <>
                 <Summary watched={watched}/>
-                <WatchedList watched={watched} />
+                <WatchedList watched={watched} onDelete={handleDeleteWatched} />
               </>
           }
         </Box>
@@ -191,9 +206,11 @@ function Box({children}) {
   </div>
 }
 
-function SelectedMovie({selectedId, onCloseMovie}) {
+function SelectedMovie({selectedId, onCloseMovie, onAddWatched, selectedWatchedMovie}) {
   const [movieData, setMovieData] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [userRating, setUserRating] = useState(null);
+
   const {
     Title: title,
     Year: year,
@@ -219,6 +236,22 @@ function SelectedMovie({selectedId, onCloseMovie}) {
     getMovieData();
   }, [selectedId]);
 
+  function handleAdd() {
+    if (userRating === 0) return;
+
+    const newWatchedMovie = {
+      imdbID: selectedId,
+      title,
+      year,
+      poster,
+      imdbRating: Number(imdbRating),
+      runtime: Number(runtime.split(' ').at(0)),
+      userRating
+    };
+    onAddWatched(newWatchedMovie);
+    onCloseMovie();
+  }
+
   return (
     <div className="details">
       {
@@ -241,7 +274,14 @@ function SelectedMovie({selectedId, onCloseMovie}) {
             </header>
 
             <section className="rating">
-              <StarRating maxRating={10} size={24} key={selectedId}></StarRating>
+              <StarRating
+                maxRating={10}
+                size={24}
+                key={selectedId}
+                onSetRating={setUserRating}
+                defaultRating={selectedWatchedMovie?.userRating}
+              />
+              <button className="btn-add" onClick={handleAdd}>+ Add</button>
               <p>
                 <em>{plot}</em>
               </p>
@@ -254,16 +294,22 @@ function SelectedMovie({selectedId, onCloseMovie}) {
   )
 }
 
-function WatchedList({watched}) {
+function WatchedList({watched, onDelete}) {
   return <ul className="list">
-    {watched.map(movie => <WatchedMovie movie={movie} key={movie.imdbID}/>)}
+    {
+      watched.map(movie => <WatchedMovie
+        movie={movie}
+        key={movie.imdbID}
+        onDelete={() => onDelete(movie.imdbID)}
+      />)
+    }
   </ul>
 }
 
-function WatchedMovie({movie}) {
+function WatchedMovie({movie, onDelete}) {
   return <li>
-    <img src={movie.Poster} alt={`${movie.Title} poster`}/>
-    <h3>{movie.Title}</h3>
+    <img src={movie.poster} alt={`${movie.title} poster`}/>
+    <h3>{movie.title}</h3>
     <div>
       <p>
         <span>⭐️</span>
@@ -277,6 +323,7 @@ function WatchedMovie({movie}) {
         <span>⏳</span>
         <span>{movie.runtime} min</span>
       </p>
+      <button className="btn-delete" onClick={onDelete}>X</button>
     </div>
   </li>
 }
@@ -295,11 +342,11 @@ function Summary({watched}) {
       </p>
       <p>
         <span>⭐️</span>
-        <span>{avgImdbRating}</span>
+        <span>{avgImdbRating.toFixed(2)}</span>
       </p>
       <p>
         <span>🌟</span>
-        <span>{avgUserRating}</span>
+        <span>{avgUserRating.toFixed(2)}</span>
       </p>
       <p>
         <span>⏳</span>
