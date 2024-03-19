@@ -233,6 +233,19 @@ function SelectedMovie({selectedId, onCloseMovie, onAddWatched, selectedWatchedM
     Released: released
   } = movieData;
 
+  useEffect(function () {
+    function callback(e) {
+      if(e.code === 'Escape') {
+        onCloseMovie();
+      }
+    }
+    document.addEventListener("keydown", callback);
+
+    return function () {
+      document.removeEventListener('keydown', callback);
+    }
+  }, [onCloseMovie]);
+
   useEffect(() => {
     async function getMovieData() {
       setIsLoading(true);
