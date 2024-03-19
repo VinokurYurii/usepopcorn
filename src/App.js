@@ -240,6 +240,10 @@ function SelectedMovie({selectedId, onCloseMovie, onAddWatched, selectedWatchedM
     if (!title) return;
 
     document.title = `Movie | ${title}`;
+
+    return function () {
+      document.title = "usePopcorn";
+    }
   }, [title]);
 
   function handleAdd() {
