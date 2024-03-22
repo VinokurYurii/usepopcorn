@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import StarRating from "./components/StarRating";
 
 const tempMovieData = [
@@ -194,10 +194,21 @@ function NumResults({movies}) {
 }
 
 function Search({query, onQuery}) {
+  const inputElement = useRef(null);
+
   useEffect(function () {
-    const el = document.querySelector('.search');
-    el.focus();
-  }, []);
+    const callback = (e) => {
+
+      if(document.activeElement === inputElement.current) return;
+
+      if (e.code === 'Enter') {
+        inputElement.current.focus();
+        onQuery("");
+      }
+    }
+    document.addEventListener("keydown", callback);
+    return () => document.removeEventListener("keydown", callback);
+  }, [onQuery]);
 
   return <input
     className="search"
@@ -205,6 +216,7 @@ function Search({query, onQuery}) {
     placeholder="Search movies..."
     value={query}
     onChange={(e) => onQuery(e.target.value)}
+    ref={inputElement}
   />
 }
 
@@ -231,6 +243,12 @@ function SelectedMovie({selectedId, onCloseMovie, onAddWatched, selectedWatchedM
   const [movieData, setMovieData] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [userRating, setUserRating] = useState(null);
+
+  const countRef = useRef(0);
+
+  useEffect(() => {
+    if (userRating) countRef.current++;
+  }, [userRating]);
 
   const {
     Title: title,
@@ -290,7 +308,8 @@ function SelectedMovie({selectedId, onCloseMovie, onAddWatched, selectedWatchedM
       poster,
       imdbRating: Number(imdbRating),
       runtime: Number(runtime.split(' ').at(0)),
-      userRating
+      userRating,
+      countRatingDecisions: countRef.current
     };
     onAddWatched(newWatchedMovie);
     onCloseMovie();
