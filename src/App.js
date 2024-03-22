@@ -2,6 +2,7 @@ import {useEffect, useRef, useState} from "react";
 import StarRating from "./components/StarRating";
 import {useMovies} from "./components/useMovies";
 import {useLocalStorageState} from "./components/useLocalStorageState";
+import {useKey} from "./components/useKey";
 
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
@@ -39,10 +40,6 @@ export default function App() {
   function handleDeleteWatched(id) {
     setWatched(watched => watched.filter(m => m.imdbID !== id))
   }
-
-  // useEffect(() => {
-  //   localStorage.setItem('watched', JSON.stringify(watched));
-  // }, [watched]);
 
   return (
     <>
@@ -107,19 +104,12 @@ function NumResults({movies}) {
 function Search({query, onQuery}) {
   const inputElement = useRef(null);
 
-  useEffect(function () {
-    const callback = (e) => {
+  useKey('Enter', () => {
+    if(document.activeElement === inputElement.current) return;
 
-      if(document.activeElement === inputElement.current) return;
-
-      if (e.code === 'Enter') {
-        inputElement.current.focus();
-        onQuery("");
-      }
-    }
-    document.addEventListener("keydown", callback);
-    return () => document.removeEventListener("keydown", callback);
-  }, [onQuery]);
+    inputElement.current.focus();
+    onQuery("");
+  });
 
   return <input
     className="search"
@@ -174,18 +164,7 @@ function SelectedMovie({selectedId, onCloseMovie, onAddWatched, selectedWatchedM
     Released: released
   } = movieData;
 
-  useEffect(function () {
-    function callback(e) {
-      if(e.code === 'Escape') {
-        onCloseMovie();
-      }
-    }
-    document.addEventListener("keydown", callback);
-
-    return function () {
-      document.removeEventListener('keydown', callback);
-    }
-  }, [onCloseMovie]);
+  useKey('Escape', onCloseMovie);
 
   useEffect(() => {
     async function getMovieData() {
